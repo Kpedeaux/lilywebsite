@@ -132,18 +132,45 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   padding:120px 0 80px; overflow:hidden; isolation:isolate;
 }
 .hero__media{ position:absolute; inset:0; z-index:-1; }
-.hero__media img{ width:100%; height:100%; object-fit:cover; object-position:center 12%; }
+.hero__media img{
+  width:100%; height:100%; object-fit:cover; object-position:center 12%;
+  filter:contrast(1.04) saturate(1.05);
+  transform:scale(1.06); transform-origin:center 30%;
+  animation: kenburns 18s ease-out both;
+  will-change:transform;
+}
 @media (min-width: 1200px){
-  .hero__media img{ object-position:center 8%; }
+  .hero__media img{ object-position:center 6%; }
 }
 @media (max-width: 700px){
   .hero__media img{ object-position:center 22%; }
 }
+@media (prefers-reduced-motion: reduce){
+  .hero__media img{ animation:none; transform:none; }
+}
+@keyframes kenburns{
+  from{ transform:scale(1.12); }
+  to{   transform:scale(1.02); }
+}
 .hero__scrim{
   position:absolute; inset:0;
   background:
-    linear-gradient(180deg, rgba(15,17,22,.55) 0%, rgba(15,17,22,.15) 35%, rgba(15,17,22,.75) 80%, rgba(15,17,22,1) 100%),
-    linear-gradient(90deg, rgba(15,17,22,.75) 0%, rgba(15,17,22,0) 55%);
+    /* Bottom darkening so headline + CTAs read crisp */
+    linear-gradient(180deg,
+      rgba(15,17,22,.35) 0%,
+      rgba(15,17,22,.05) 22%,
+      rgba(15,17,22,.05) 45%,
+      rgba(15,17,22,.55) 75%,
+      rgba(15,17,22,.96) 100%),
+    /* Subtle left-side gradient pulls eye to the text block */
+    linear-gradient(100deg,
+      rgba(15,17,22,.55) 0%,
+      rgba(15,17,22,0) 45%);
+}
+/* Soft vignette baked into the media layer, so it sits behind content */
+.hero__media::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(120% 85% at 55% 45%, transparent 58%, rgba(15,17,22,.5) 100%);
 }
 .hero__content{ max-width:900px; animation:rise .9s var(--ease) both; }
 .hero__cta{ display:flex; flex-wrap:wrap; gap:.8rem; margin-top:2rem; }
