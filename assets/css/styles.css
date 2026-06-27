@@ -328,3 +328,53 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .hero{ padding:110px 0 70px; min-height:92svh; }
   .contact-form{ padding:1.4rem; }
 }
+
+/* -------- Latest Work page -------- */
+/* Solid nav on interior pages (no hero behind it) */
+.nav--solid{ background:rgba(15,17,22,.92); border-bottom:1px solid var(--line); }
+
+/* Interior page section clears the fixed nav */
+.section--page{ padding-top:clamp(7rem, 12vh, 9rem); border-top:0; }
+
+.stories{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:1.5rem; margin-top:2.6rem;
+}
+.story{
+  display:flex; flex-direction:column;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:1.6rem 1.7rem;
+  transition:transform .3s var(--ease), border-color .3s var(--ease);
+}
+.story:hover{ transform:translateY(-3px); border-color:rgba(201,169,106,.5); }
+.story--feature{ grid-column:1 / -1; }
+
+.story__meta{
+  display:flex; align-items:center; gap:.7rem; flex-wrap:wrap;
+  font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; margin-bottom:.9rem;
+}
+.story__source{
+  display:inline-flex; align-items:center; padding:.22rem .65rem;
+  border:1px solid var(--line); border-radius:999px; color:var(--accent); letter-spacing:.12em;
+}
+.story__date{ color:var(--ink-muted); }
+
+.story h3{
+  font-family:var(--f-serif); font-weight:500; line-height:1.22; margin:0 0 .65rem;
+  font-size:1.35rem;
+}
+.story--feature h3{ font-size:clamp(1.6rem, 2.4vw + .5rem, 2.25rem); }
+.story h3 a{ color:var(--ink); }
+.story h3 a:hover{ color:var(--accent); }
+.story p{ color:var(--ink-dim); margin:0 0 1.3rem; font-size:.97rem; }
+.story--feature p{ max-width:70ch; font-size:1.05rem; }
+
+.story__link{ margin-top:auto; align-self:flex-start; font-size:.9rem; font-weight:600; color:var(--accent); letter-spacing:.02em; }
+.story__link:hover{ color:var(--ink); }
+
+.stories-foot{ margin-top:2.6rem; color:var(--ink-muted); font-size:.92rem; }
+.stories-foot a{ color:var(--ink-dim); border-bottom:1px solid var(--accent); }
+.stories-foot a:hover{ color:var(--accent); }
+
+@media (max-width: 900px){
+  .stories{ grid-template-columns:1fr; }
+}

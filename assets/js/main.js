@@ -30,7 +30,7 @@
   }
 
   // IntersectionObserver reveals (added class via JS so no-JS users see content)
-  const targets = document.querySelectorAll('.section, .reel, .timeline__item, .awards li');
+  const targets = document.querySelectorAll('.section, .reel, .story, .timeline__item, .awards li');
   targets.forEach(el => el.classList.add('reveal'));
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
