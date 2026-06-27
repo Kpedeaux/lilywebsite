@@ -43,16 +43,46 @@
     targets.forEach(el => el.classList.add('is-in'));
   }
 
-  // Contact form — client-side validation + placeholder handler
+  // Contact form — client-side validation + AJAX submit to Formspree
   const form = document.querySelector('.contact-form');
   if (form) {
-    form.addEventListener('submit', (e) => {
+    const note = form.querySelector('.contact-form__note');
+    const btn = form.querySelector('button[type="submit"]');
+    const fallbackEmail = 'lcummings@wwltv.com';
+
+    const showNote = (msg) => {
+      if (note) { note.hidden = false; note.textContent = msg; }
+    };
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!form.checkValidity()) { form.reportValidity(); return; }
-      // TODO: POST to backend (Node/Express, Flask, or Formspree)
-      const note = form.querySelector('.contact-form__note');
-      if (note) { note.hidden = false; note.textContent = 'Thanks — this form is not yet wired to a backend. Email lcummings@wwltv.com in the meantime.'; }
-      form.reset();
+
+      const label = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (res.ok) {
+          showNote('Thanks — your message has been sent. Lily will be in touch soon.');
+          form.reset();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          const msg = (data && data.errors)
+            ? data.errors.map((x) => x.message).join(', ')
+            : 'Sorry, something went wrong. Please email ' + fallbackEmail + ' directly.';
+          showNote(msg);
+        }
+      } catch (err) {
+        showNote('Network error — please email ' + fallbackEmail + ' directly.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+      }
     });
   }
 })();

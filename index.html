@@ -262,8 +262,7 @@
           <h2 class="h2">Have a story to share?</h2>
           <p>Reach out for story tips, press inquiries, speaking engagements, or to just say hi.</p>
           <p class="contact__emails">
-            <a href="mailto:lcummings@wwltv.com">lcummings@wwltv.com</a><br/>
-            <a href="mailto:lilyrain.c@gmail.com">lilyrain.c@gmail.com</a>
+            <a href="mailto:lcummings@wwltv.com">lcummings@wwltv.com</a>
           </p>
           <ul class="socials" aria-label="Social links">
             <li><a href="https://www.instagram.com/lilyrcummings" rel="me noopener" target="_blank">Instagram</a></li>
@@ -271,7 +270,8 @@
             <li><a href="https://www.facebook.com/lilyrcummings" rel="me noopener" target="_blank">Facebook</a></li>
           </ul>
         </div>
-        <form class="contact-form" action="#" method="post" novalidate>
+        <!-- Replace YOUR_FORM_ID with the ID from your Formspree form endpoint -->
+        <form class="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" novalidate>
           <div class="field">
             <label for="cf-name">Name</label>
             <input id="cf-name" name="name" required autocomplete="name" />
@@ -288,8 +288,12 @@
             <label for="cf-message">Message</label>
             <textarea id="cf-message" name="message" rows="5" required></textarea>
           </div>
+          <!-- Sets the email subject line Lily sees in her inbox -->
+          <input type="hidden" name="_subject" value="New message from lilycummings.com" />
+          <!-- Honeypot: hidden from people, bots fill it in and get rejected -->
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;" />
           <button type="submit" class="btn btn--primary">Send message</button>
-          <p class="contact-form__note" hidden>Form submission is a placeholder — wire this up to your backend of choice (Node/Express, Flask, Formspree, etc.).</p>
+          <p class="contact-form__note" role="status" aria-live="polite" hidden></p>
         </form>
       </div>
     </section>
