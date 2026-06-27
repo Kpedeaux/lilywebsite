@@ -131,11 +131,17 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   position:relative; min-height:100svh; display:flex; align-items:flex-end;
   padding:120px 0 80px; overflow:hidden; isolation:isolate;
 }
-.hero__media{ position:absolute; inset:0; z-index:-1; }
+.hero__media{
+  position:absolute; inset:0; z-index:-1;
+  /* Headroom: how far the photo is pushed down so the top of her head clears the nav */
+  --hero-drop: 92px;
+  /* Navy fill behind the exposed top strip, tuned to the Emmy step-and-repeat backdrop */
+  background:linear-gradient(180deg, #10162b 0%, #1b2750 62%, #20305c 100%);
+}
 .hero__media img{
   width:100%; height:100%; object-fit:cover; object-position:center top;
   filter:contrast(1.04) saturate(1.05);
-  transform:scale(1.04); transform-origin:center top;
+  transform:translateY(var(--hero-drop)) scale(1.04); transform-origin:center top;
   animation: kenburns 18s ease-out both;
   will-change:transform;
 }
@@ -143,14 +149,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .hero__media img{ object-position:center top; }
 }
 @media (max-width: 700px){
+  .hero__media{ --hero-drop: 64px; }
   .hero__media img{ object-position:center 8%; }
 }
 @media (prefers-reduced-motion: reduce){
-  .hero__media img{ animation:none; transform:none; }
+  .hero__media img{ animation:none; transform:translateY(var(--hero-drop)) scale(1.04); }
 }
 @keyframes kenburns{
-  from{ transform:scale(1.08); }
-  to{   transform:scale(1.0); }
+  from{ transform:translateY(var(--hero-drop)) scale(1.08); }
+  to{   transform:translateY(var(--hero-drop)) scale(1.0); }
 }
 .hero__scrim{
   position:absolute; inset:0;
