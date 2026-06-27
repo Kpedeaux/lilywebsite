@@ -378,3 +378,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width: 900px){
   .stories{ grid-template-columns:1fr; }
 }
+
+/* Résumé download button in Experience */
+.exp-actions{ margin:.4rem 0 2.4rem; }
