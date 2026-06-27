@@ -1,0 +1,54 @@
+name: Update Latest Work
+
+# Runs daily to pull Lily's newest bylines, and can be run manually
+# (with the "backfill" box checked) to do a deep historical crawl.
+on:
+  schedule:
+    - cron: '0 11 * * *' # 11:00 UTC daily (~6:00 AM New Orleans)
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'Deep historical backfill (slower)'
+        type: boolean
+        default: false
+
+# Allow the workflow to commit the regenerated files back to the repo.
+permissions:
+  contents: write
+
+# Never let two runs commit at once.
+concurrency:
+  group: update-latest-work
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update Latest Work
+        run: |
+          if [ "${{ github.event.inputs.backfill }}" = "true" ]; then
+            node scripts/update-latest-work.mjs --backfill
+          else
+            node scripts/update-latest-work.mjs
+          fi
+
+      - name: Commit changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add assets/data/articles.json latest-work.html
+            git commit -m "Auto-update Latest Work ($(date -u +%Y-%m-%d))"
+            git push
+          else
+            echo "No changes to commit."
+          fi
