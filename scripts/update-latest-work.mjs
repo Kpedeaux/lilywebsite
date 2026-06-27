@@ -9,7 +9,7 @@
  *
  * What it does:
  *   1. Queries Google News RSS for her byline.
- *   2. Resolves each encrypted Google link to the real article URL (follows redirect).
+ *   2. Resolves each encrypted Google link to the real article URL.
  *   3. Keeps only articles from her known outlets (allowlist) and drops duplicates.
  *   4. Merges into assets/data/articles.json (the site's own canonical archive).
  *   5. Regenerates the cards in latest-work.html between the STORIES markers.
@@ -158,22 +158,105 @@ function parseRssItems(xml) {
   return items;
 }
 
-// Resolve a Google News redirect link to the underlying article URL.
-async function resolveLink(gLink) {
+/* --- Google News link decoding ---------------------------------------------
+ * Google wraps article links in an encrypted token. We resolve it three ways,
+ * cheapest first:
+ *   1. Offline decode — older tokens embed the destination URL directly.
+ *   2. batchexecute — Google's internal endpoint returns the URL for new tokens.
+ *   3. Redirect follow — last-resort fallback.
+ * ------------------------------------------------------------------------- */
+
+function b64ToBytes(b64) {
+  let s = b64.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return Buffer.from(s, 'base64');
+}
+
+function gnArticleId(gLink) {
   try {
-    const r = await fetch(gLink, { headers: { 'User-Agent': UA }, redirect: 'follow' });
-    if (r.url && !/news\.google\.com/.test(r.url)) return r.url;
-    // Fallback: some responses embed the destination in a JS/meta redirect.
-    const body = await r.text();
-    const m =
-      body.match(/<meta[^>]*http-equiv=["']refresh["'][^>]*url=([^"'>]+)/i) ||
-      body.match(/data-n-au=["']([^"']+)["']/i) ||
-      body.match(/rel=["']canonical["'][^>]*href=["']([^"']+)["']/i);
-    if (m && /^https?:/.test(m[1]) && !/news\.google\.com/.test(m[1])) return m[1];
-    return null;
+    const u = new URL(gLink);
+    if (!u.hostname.includes('news.google.com')) return null;
+    const parts = u.pathname.split('/').filter(Boolean);
+    const i = parts.indexOf('articles');
+    if (i !== -1 && parts[i + 1]) return parts[i + 1];
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function offlineDecode(id) {
+  try {
+    let b = b64ToBytes(id);
+    if (b[0] === 0x08 && b[1] === 0x13 && b[2] === 0x22) b = b.subarray(3);
+    const n = b.length;
+    if (n >= 3 && b[n - 3] === 0xd2 && b[n - 2] === 0x01 && b[n - 1] === 0x00) b = b.subarray(0, n - 3);
+    let len = b[0];
+    let offset = 1;
+    if (len >= 0x80) {
+      len = (b[1] << 7) | (b[0] & 0x7f);
+      offset = 2;
+    }
+    const str = b.subarray(offset, offset + len).toString('utf8');
+    return /^https?:\/\//.test(str) ? str : null;
   } catch {
     return null;
   }
+}
+
+function unescapeUrl(u) {
+  return u
+    .replace(/\\u003d/gi, '=')
+    .replace(/\\u0026/gi, '&')
+    .replace(/\\u003f/gi, '?')
+    .replace(/\\u002f/gi, '/')
+    .replace(/\\\//g, '/');
+}
+
+async function batchExecuteDecode(id) {
+  try {
+    const page = await fetch(`https://news.google.com/rss/articles/${id}`, { headers: { 'User-Agent': UA } });
+    const html = await page.text();
+    const sig = html.match(/data-n-a-sg="([^"]+)"/);
+    const ts = html.match(/data-n-a-ts="([^"]+)"/);
+    if (!sig || !ts) return null;
+    const reqArr = [
+      [
+        [
+          'Fbv4je',
+          `["garturlreq",[["X","X",["X","X"],null,null,1,1,"US:en",null,1,null,null,null,null,null,0,1],"X","X",1,[1,1,1],1,1,null,0,0,null,0],"${id}",${ts[1]},"${sig[1]}"]`,
+        ],
+      ],
+    ];
+    const body = 'f.req=' + encodeURIComponent(JSON.stringify(reqArr));
+    const ex = await fetch('https://news.google.com/_/DotsSplashUi/data/batchexecute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'User-Agent': UA },
+      body,
+    });
+    const txt = await ex.text();
+    const m = txt.match(/garturlres\\",\\"(.*?)\\"/) || txt.match(/"garturlres","(https?:[^"]+)"/);
+    return m ? unescapeUrl(m[1]) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveLink(gLink) {
+  const id = gnArticleId(gLink);
+  if (id) {
+    const off = offlineDecode(id);
+    if (off) return off;
+    const on = await batchExecuteDecode(id);
+    if (on) return on;
+  }
+  try {
+    const r = await fetch(gLink, { headers: { 'User-Agent': UA }, redirect: 'follow' });
+    if (r.url && !/news\.google\.com/.test(r.url)) return r.url;
+  } catch {
+    /* ignore */
+  }
+  return null;
 }
 
 function monthWindows(start) {
@@ -207,6 +290,7 @@ async function collect({ backfill }) {
   const found = new Map(); // normalizedUrl -> article
   let skippedUnresolved = 0;
   let droppedOutlet = 0;
+  let loggedSample = false;
 
   for (const q of queries) {
     let parsed = [];
@@ -226,6 +310,10 @@ async function collect({ backfill }) {
         skippedUnresolved++;
         continue;
       }
+      if (!loggedSample) {
+        console.log('Sample resolved link:', real);
+        loggedSample = true;
+      }
       if (!allowed(real)) {
         droppedOutlet++;
         continue;
@@ -242,7 +330,7 @@ async function collect({ backfill }) {
         summary: it.description,
       });
     }
-    if (backfill) console.log(`window ${q.match(/after:(\S+)/)?.[1]} → ${found.size} total so far`);
+    if (backfill) console.log(`window ${q.match(/after:(\S+)/)?.[1]} -> ${found.size} total so far`);
   }
 
   console.log(`Collected ${found.size} articles (skipped ${skippedUnresolved} unresolved, dropped ${droppedOutlet} off-outlet).`);
@@ -264,7 +352,7 @@ function renderCards(articles) {
               ${beat}<span class="story__source">${escapeHtml(a.source)}</span>${date}
             </div>
             <h3><a href="${url}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a></h3>${summary}
-            <a class="story__link" href="${url}" target="_blank" rel="noopener">Read the full story →</a>
+            <a class="story__link" href="${url}" target="_blank" rel="noopener">Read the full story &rarr;</a>
           </article>`;
     })
     .join('\n\n');
