@@ -74,8 +74,23 @@ function decodeEntities(s = '') {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/gi, ' ')
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .trim();
+}
+
+// Google's RSS gives no real summary for many WWL-TV items — just the headline
+// followed by the outlet name. Strip that boilerplate; if nothing meaningful is
+// left (it's just the headline again), return '' so the card shows only the title.
+function cleanSummary(title, summary) {
+  if (!summary) return '';
+  let s = summary.replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim();
+  s = s.replace(/\s*[-–—|]?\s*(wwltv\.com|wwl-tv|yahoo(?:\s+\w+)?|msn|aol)\.?\s*$/i, '').trim();
+  s = s.replace(/\s+/g, ' ').trim();
+  const norm = (x) => x.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  if (!s) return '';
+  if (norm(s) === norm(title) || norm(title).startsWith(norm(s)) || norm(s).startsWith(norm(title))) return '';
+  return s;
 }
 
 function escapeHtml(s = '') {
@@ -327,7 +342,7 @@ async function collect({ backfill }) {
         source: sourceLabel(real),
         beat: beatFor(real, it.title),
         date: iso,
-        summary: it.description,
+        summary: cleanSummary(it.title, it.description),
       });
     }
     if (backfill) console.log(`window ${q.match(/after:(\S+)/)?.[1]} -> ${found.size} total so far`);
@@ -404,6 +419,7 @@ async function main() {
 
   const articles = [...existing.values()]
     .filter((a) => a.url && a.title)
+    .map((a) => ({ ...a, summary: cleanSummary(a.title, a.summary) })) // re-clean existing entries
     .sort((x, y) => (y.date || '').localeCompare(x.date || ''));
 
   const updated = new Date().toISOString().slice(0, 10);

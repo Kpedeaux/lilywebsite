@@ -32,15 +32,18 @@
   // IntersectionObserver reveals (added class via JS so no-JS users see content)
   const targets = document.querySelectorAll('.section, .reel, .story, .timeline__item, .awards li');
   targets.forEach(el => el.classList.add('reveal'));
+  const revealAll = () => targets.forEach(el => el.classList.add('is-in'));
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0, rootMargin: '0px 0px -8% 0px' }); // threshold 0 so tall sections still trigger
     targets.forEach(el => io.observe(el));
+    // Failsafe: content must never stay hidden if the observer doesn't fire.
+    setTimeout(revealAll, 2500);
   } else {
-    targets.forEach(el => el.classList.add('is-in'));
+    revealAll();
   }
 
   // Contact form — client-side validation + AJAX submit to Formspree
