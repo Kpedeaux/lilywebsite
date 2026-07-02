@@ -137,6 +137,40 @@ function normalizeUrl(url) {
   }
 }
 
+// A story often exists both as its WWL-TV original and as a Yahoo/MSN/AOL
+// syndication — different URLs, identical headline — so URL dedupe alone lets
+// both through as separate cards. Collapse same-headline entries to one,
+// preferring the most authoritative source (the WWL-TV canonical over syndication).
+const SOURCE_PRIORITY = ['wwltv.com', 'yahoo.com', 'msn.com', 'aol.com'];
+
+function sourceRank(url) {
+  const h = hostOf(url);
+  const i = SOURCE_PRIORITY.findIndex((d) => h === d || h.endsWith('.' + d));
+  return i === -1 ? SOURCE_PRIORITY.length : i;
+}
+
+function titleKey(t = '') {
+  return t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function dedupeByTitle(articles) {
+  const best = new Map();
+  for (const a of articles) {
+    const k = titleKey(a.title);
+    if (!k) continue;
+    const cur = best.get(k);
+    if (!cur) {
+      best.set(k, a);
+      continue;
+    }
+    const better =
+      sourceRank(a.url) < sourceRank(cur.url) ||
+      (sourceRank(a.url) === sourceRank(cur.url) && !cur.summary && a.summary);
+    if (better) best.set(k, a);
+  }
+  return [...best.values()];
+}
+
 function fmtDate(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return '';
@@ -290,6 +324,24 @@ function monthWindows(start) {
   return out;
 }
 
+// Recent date windows for the daily run. Google News RSS returns a single
+// relevance-ranked feed (capped, NOT chronological), so a brand-new byline can
+// be absent from the bare query for days. Querying the last few months with
+// explicit after:/before: bounds forces Google to return recent items by date,
+// so newly-published stories are picked up the day after they're indexed.
+const INCREMENTAL_MONTHS = 3;
+
+function recentWindows(months) {
+  const now = new Date();
+  let y = now.getUTCFullYear();
+  let m = now.getUTCMonth() + 1 - (months - 1); // include current + prior (months-1)
+  while (m <= 0) {
+    m += 12;
+    y -= 1;
+  }
+  return monthWindows({ year: y, month: m });
+}
+
 /* ----------------------------- COLLECT -------------------------------------- */
 
 async function collect({ backfill }) {
@@ -299,7 +351,12 @@ async function collect({ backfill }) {
       queries.push(`${QUERY} after:${w.after} before:${w.before}`);
     }
   } else {
-    queries.push(QUERY); // recent rolling window
+    // Date-windowed recent crawl (see recentWindows). Falls back to the bare
+    // relevance query too, so nothing that only surfaces there is lost.
+    for (const w of recentWindows(INCREMENTAL_MONTHS)) {
+      queries.push(`${QUERY} after:${w.after} before:${w.before}`);
+    }
+    queries.push(QUERY);
   }
 
   const found = new Map(); // normalizedUrl -> article
@@ -417,10 +474,11 @@ async function main() {
     }
   }
 
-  const articles = [...existing.values()]
-    .filter((a) => a.url && a.title)
-    .map((a) => ({ ...a, summary: cleanSummary(a.title, a.summary) })) // re-clean existing entries
-    .sort((x, y) => (y.date || '').localeCompare(x.date || ''));
+  const articles = dedupeByTitle(
+    [...existing.values()]
+      .filter((a) => a.url && a.title)
+      .map((a) => ({ ...a, summary: cleanSummary(a.title, a.summary) })), // re-clean existing entries
+  ).sort((x, y) => (y.date || '').localeCompare(x.date || ''));
 
   const updated = new Date().toISOString().slice(0, 10);
   await writeFile(DATA_FILE, JSON.stringify({ updated, articles }, null, 2) + '\n');
