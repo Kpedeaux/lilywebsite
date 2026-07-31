@@ -8,7 +8,7 @@
   --bg-elev: #15181f;
   --ink: #f5efe3;
   --ink-dim: #b9b2a6;
-  --ink-muted: #7c7669;
+  --ink-muted: #8b8577;
   --accent: #c9a96a;          /* warm editorial gold */
   --accent-ink: #1a1410;
   --line: rgba(245,239,227,.12);
@@ -293,7 +293,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   padding:.8rem 1rem; border-radius:8px; font:inherit; font-size:.98rem;
   transition:border-color .2s var(--ease);
 }
-.field input:focus, .field textarea:focus{ border-color:var(--accent); outline:none; }
+.field input:focus, .field textarea:focus{ border-color:var(--accent); }
 .field textarea{ resize:vertical; min-height:120px; }
 .contact-form .btn{ justify-self:start; margin-top:.4rem; }
 

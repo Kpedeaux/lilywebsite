@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Privacy | Lily Cummings</title>
+  <meta name="description" content="What lilycummings.net collects and how to reach us about it." />
+  <link rel="canonical" href="https://lilycummings.net/privacy" />
+
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZBFJQC0R68"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-ZBFJQC0R68');
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+
+  <style>
+    .legal-page { max-width: 720px; margin: 0 auto; padding: 4.5rem 1.25rem 3rem; }
+    .legal-page h1 { font-family: "Fraunces", serif; font-size: 2rem; color: var(--ink); margin-bottom: .4rem; }
+    .legal-updated { font-size: .85rem; color: var(--ink-muted); margin-bottom: 2rem; }
+    .legal-page h2 { font-family: "Fraunces", serif; font-size: 1.2rem; color: var(--ink); margin: 1.8rem 0 .5rem; }
+    .legal-page p { font-size: .96rem; line-height: 1.75; color: var(--ink-dim); margin-bottom: .8rem; }
+    .legal-page a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+    .back-home { display: inline-block; font-size: .85rem; color: var(--ink-dim); margin-bottom: 2.2rem; text-decoration: none; }
+    .back-home:hover, .back-home:focus-visible { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main class="legal-page">
+    <a href="/" class="back-home">&larr; lilycummings.net</a>
+
+    <h1>Privacy</h1>
+    <p class="legal-updated">Last updated July 31, 2026</p>
+
+    <p>This site is Lily Cummings' journalism portfolio. It collects very little, and this page describes all of it.</p>
+
+    <h2>Analytics</h2>
+    <p>The site uses Google Analytics to see which pages get read and roughly where visitors come from. It sets cookies that start with _ga. It never shows us your name or exact location. You can block it in your browser or with Google's opt-out tool at <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">tools.google.com/dlpage/gaoptout</a>.</p>
+
+    <h2>The contact form</h2>
+    <p>What you type in the contact form (name, email, subject, message) is delivered to Lily by Formspree, a form delivery service, and is used only to reply to you.</p>
+
+    <h2>Fonts and video</h2>
+    <p>Pages load fonts from Google Fonts, so your browser requests those files from Google. News reels are embedded from YouTube in its privacy-enhanced mode, which sets no cookies until you press play.</p>
+
+    <h2>Nothing else</h2>
+    <p>No accounts, no ad tracking, no data sales. Some browsers send Do Not Track or Global Privacy Control signals; the site does not change what it collects when it sees them, because this page already describes everything it collects.</p>
+
+    <h2>Questions</h2>
+    <p>Use the <a href="/#contact">contact form</a> and we will tell you what we have about you, correct it, or delete it.</p>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__wrap">
+      <p>&copy; <span id="year"></span> Lily Cummings. All rights reserved.</p>
+      <p class="footer__meta"><a href="/privacy">Privacy</a></p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
