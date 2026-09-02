@@ -390,3 +390,38 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Résumé download button in Experience */
 .exp-actions{ margin:.4rem 0 2.4rem; }
+
+/* Made by CoreRail credit ---------------------------------------------- */
+.corerail-credit {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.corerail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  text-decoration: none;
+  color: inherit;
+}
+.corerail-badge:hover .corerail-badge__label,
+.corerail-badge:focus-visible .corerail-badge__label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.corerail-badge__label {
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.corerail-badge__art {
+  height: 1.3em;
+  width: auto;
+  flex-shrink: 0;
+  display: block;
+}
+
+.corerail-credit [fill="#6B7F5E"] { fill: var(--corerail-sage, #6B7F5E); }
+/* ---------------------------------------------------------------------- */
